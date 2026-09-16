@@ -1,0 +1,19 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local environment / dependencies
+venv/
+env/
+ENV/
+
+# YOLO weights
+*.pt
+*.onnx
+*.engine
+
+# Output logs and clips
+logs/
+clips/
+test_videos/

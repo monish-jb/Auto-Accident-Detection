@@ -13,11 +13,16 @@ phone numbers/emails instead.
 
 import os
 import time
+import logging
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
 
 import config
+
+logger = logging.getLogger(__name__)
 
 try:
     from twilio.rest import Client as TwilioClient
@@ -33,8 +38,11 @@ def _log(message):
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
     line = f"[{timestamp}] {message}"
     print(line)
-    with open(LOG_PATH, "a") as f:
-        f.write(line + "\n")
+    try:
+        with open(LOG_PATH, "a", encoding="utf-8") as f:
+            f.write(line + "\n")
+    except Exception as e:
+        logger.error(f"Failed writing to log file {LOG_PATH}: {e}")
 
 
 class EmergencyAlertSystem:
@@ -63,20 +71,26 @@ class EmergencyAlertSystem:
         if config.DRY_RUN:
             _log(f"[DRY_RUN][SMS -> {to_number}] {message}")
             return
-        self.twilio_client.messages.create(
-            body=message, from_=config.TWILIO_FROM_NUMBER, to=to_number
-        )
-        _log(f"[SMS SENT -> {to_number}]")
+        try:
+            self.twilio_client.messages.create(
+                body=message, from_=config.TWILIO_FROM_NUMBER, to=to_number
+            )
+            _log(f"[SMS SENT -> {to_number}]")
+        except Exception as e:
+            _log(f"[SMS ERROR -> {to_number}] {e}")
 
     def _make_call(self, to_number, message):
         if config.DRY_RUN:
             _log(f"[DRY_RUN][CALL -> {to_number}] Would place automated voice call: {message}")
             return
-        twiml = f"<Response><Say>{message}</Say></Response>"
-        self.twilio_client.calls.create(
-            twiml=twiml, from_=config.TWILIO_FROM_NUMBER, to=to_number
-        )
-        _log(f"[CALL PLACED -> {to_number}]")
+        try:
+            twiml = f"<Response><Say>{message}</Say></Response>"
+            self.twilio_client.calls.create(
+                twiml=twiml, from_=config.TWILIO_FROM_NUMBER, to=to_number
+            )
+            _log(f"[CALL PLACED -> {to_number}]")
+        except Exception as e:
+            _log(f"[CALL ERROR -> {to_number}] {e}")
 
     def _send_email(self, to_email, subject, body, attachment_path=None):
         if config.DRY_RUN:
@@ -84,17 +98,31 @@ class EmergencyAlertSystem:
             _log(f"[DRY_RUN][EMAIL -> {to_email}] {subject}{attach_note}")
             return
 
-        msg = MIMEMultipart()
-        msg["From"] = config.SMTP_USERNAME
-        msg["To"] = to_email
-        msg["Subject"] = subject
-        msg.attach(MIMEText(body, "plain"))
+        try:
+            msg = MIMEMultipart()
+            msg["From"] = config.SMTP_USERNAME
+            msg["To"] = to_email
+            msg["Subject"] = subject
+            msg.attach(MIMEText(body, "plain"))
 
-        with smtplib.SMTP(config.SMTP_SERVER, config.SMTP_PORT) as server:
-            server.starttls()
-            server.login(config.SMTP_USERNAME, config.SMTP_PASSWORD)
-            server.send_message(msg)
-        _log(f"[EMAIL SENT -> {to_email}]")
+            if attachment_path and os.path.exists(attachment_path):
+                with open(attachment_path, "rb") as attachment:
+                    part = MIMEBase("application", "octet-stream")
+                    part.set_payload(attachment.read())
+                encoders.encode_base64(part)
+                part.add_header(
+                    "Content-Disposition",
+                    f"attachment; filename={os.path.basename(attachment_path)}",
+                )
+                msg.attach(part)
+
+            with smtplib.SMTP(config.SMTP_SERVER, config.SMTP_PORT) as server:
+                server.starttls()
+                server.login(config.SMTP_USERNAME, config.SMTP_PASSWORD)
+                server.send_message(msg)
+            _log(f"[EMAIL SENT -> {to_email}]")
+        except Exception as e:
+            _log(f"[EMAIL ERROR -> {to_email}] {e}")
 
     def dispatch(self, clip_path, details):
         """
@@ -106,13 +134,18 @@ class EmergencyAlertSystem:
         _log(f"=== DISPATCHING EMERGENCY ALERT === {message}")
 
         for service, contact in config.EMERGENCY_CONTACTS.items():
-            self._send_sms(contact["phone"], f"[{service.upper()}] {message}")
-            self._make_call(contact["phone"], message)
-            self._send_email(
-                contact["email"],
-                subject=f"URGENT: Vehicle Accident Detected - {service.title()} Dispatch",
-                body=message,
-                attachment_path=clip_path,
-            )
+            phone = contact.get("phone", "")
+            email = contact.get("email", "")
+            if phone:
+                self._send_sms(phone, f"[{service.upper()}] {message}")
+                self._make_call(phone, message)
+            if email:
+                self._send_email(
+                    email,
+                    subject=f"URGENT: Vehicle Accident Detected - {service.title()} Dispatch",
+                    body=message,
+                    attachment_path=clip_path,
+                )
 
         _log("=== ALERT DISPATCH COMPLETE ===")
+
