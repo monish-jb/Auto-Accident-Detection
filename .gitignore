@@ -7,6 +7,25 @@ __pycache__/
 venv/
 env/
 ENV/
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# Database files
+*.db
+*.sqlite
+traffic_control.db
+test_traffic.db
+database.db
+
+# Storage & Uploads & Outputs
+outputs/
+outputs_normal/
+storage/uploads/*
+storage/annotated/*
+storage/thumbnails/*
+storage/posters/*
+!storage/**/.gitkeep
 
 # YOLO weights
 *.pt

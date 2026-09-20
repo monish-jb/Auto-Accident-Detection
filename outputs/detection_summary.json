@@ -1,0 +1,33 @@
+{
+  "video_path": "test_videos/test_accident.mp4",
+  "total_frames": 227,
+  "video_fps": 30.00264340470526,
+  "video_resolution": "1080x1920",
+  "processing_time_sec": 58.63,
+  "processing_fps": 3.87,
+  "accident_detected": true,
+  "first_accident_frame": 29,
+  "first_accident_timestamp_sec": 0.933,
+  "max_accident_score": 6,
+  "total_accident_frames": 1,
+  "accident_events_summary": [
+    {
+      "frame": 29,
+      "timestamp_sec": 0.933,
+      "score": 3,
+      "involved_ids": [
+        "5",
+        "3"
+      ],
+      "collisions": [
+        [
+          "3",
+          "5",
+          0.1788077422191627
+        ]
+      ]
+    }
+  ],
+  "annotated_video_path": "outputs\\annotated_output.mp4",
+  "csv_log_path": "outputs\\detection_results.csv"
+}

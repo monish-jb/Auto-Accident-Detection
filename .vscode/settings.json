@@ -1,0 +1,11 @@
+{
+  "python.defaultInterpreterPath": "C:\\v\\Scripts\\python.exe",
+  "python.analysis.extraPaths": [
+    "C:\\v\\Lib\\site-packages",
+    "${workspaceFolder}"
+  ],
+  "python.autoComplete.extraPaths": [
+    "C:\\v\\Lib\\site-packages",
+    "${workspaceFolder}"
+  ]
+}

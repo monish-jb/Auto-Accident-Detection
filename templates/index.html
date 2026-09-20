@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoAccident AI - Real-Time Accident Detection & Member Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-wrapper">
+        <!-- Navigation Header -->
+        <header class="navbar">
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-car-burst"></i>
+                </div>
+                <div class="logo-text">
+                    <span class="brand-title">AutoAccident<span class="brand-highlight">AI</span></span>
+                    <span class="brand-subtitle">Smart Emergency Detection</span>
+                </div>
+            </div>
+
+            <div class="header-status">
+                <span class="status-indicator active"></span>
+                <span class="status-text">Engine Online (YOLOv8 + DeepSORT)</span>
+            </div>
+
+            <div class="user-profile-section" id="userProfileSection">
+                <!-- Injected via JS -->
+            </div>
+        </header>
+
+        <!-- Main Body -->
+        <main class="main-content">
+            
+            <!-- Auth Container (Shown if not logged in) -->
+            <section class="auth-section" id="authSection" style="display: none;">
+                <div class="glass-card auth-card">
+                    <div class="auth-header">
+                        <h2>Member Access Portal</h2>
+                        <p>Sign in to view video upload history and trigger accident detection analysis</p>
+                    </div>
+
+                    <div class="auth-tabs">
+                        <button class="tab-btn active" id="loginTabBtn" onclick="switchAuthTab('login')">Sign In</button>
+                        <button class="tab-btn" id="registerTabBtn" onclick="switchAuthTab('register')">Create Account</button>
+                    </div>
+
+                    <!-- Login Form -->
+                    <form id="loginForm" class="auth-form" onsubmit="handleLogin(event)">
+                        <div class="form-group">
+                            <label><i class="fa-solid fa-user"></i> Username or Email</label>
+                            <input type="text" id="loginUsername" placeholder="e.g. demo" value="demo" required>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fa-solid fa-lock"></i> Password</label>
+                            <input type="password" id="loginPassword" placeholder="••••••••" value="demo123" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="fa-solid fa-right-to-bracket"></i> Sign In to Dashboard
+                        </button>
+                        <div class="demo-login-hint">
+                            <button type="button" class="btn btn-secondary btn-sm btn-block" onclick="fillDemoCredentials()">
+                                <i class="fa-solid fa-bolt"></i> Quick Login as Demo Officer
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Register Form -->
+                    <form id="registerForm" class="auth-form" style="display: none;" onsubmit="handleRegister(event)">
+                        <div class="form-group">
+                            <label><i class="fa-solid fa-user-tag"></i> Full Name</label>
+                            <input type="text" id="regFullName" placeholder="e.g. Officer Jane Doe" required>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fa-solid fa-user"></i> Username</label>
+                            <input type="text" id="regUsername" placeholder="janedoe" required>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fa-solid fa-envelope"></i> Email Address</label>
+                            <input type="email" id="regEmail" placeholder="jane@police.gov" required>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fa-solid fa-lock"></i> Password</label>
+                            <input type="password" id="regPassword" placeholder="••••••••" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="fa-solid fa-user-plus"></i> Register Member Account
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Dashboard View (Shown when logged in) -->
+            <section class="dashboard-section" id="dashboardSection" style="display: none;">
+                
+                <!-- System Stats Overview Cards -->
+                <div class="stats-grid">
+                    <div class="glass-card stat-card">
+                        <div class="stat-icon icon-blue">
+                            <i class="fa-solid fa-video"></i>
+                        </div>
+                        <div class="stat-details">
+                            <span class="stat-value" id="statTotalVideos">0</span>
+                            <span class="stat-label">Videos Scanned</span>
+                        </div>
+                    </div>
+
+                    <div class="glass-card stat-card">
+                        <div class="stat-icon icon-red">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <div class="stat-details">
+                            <span class="stat-value" id="statAccidentsFlagged">0</span>
+                            <span class="stat-label">Accidents Flagged</span>
+                        </div>
+                    </div>
+
+                    <div class="glass-card stat-card">
+                        <div class="stat-icon icon-green">
+                            <i class="fa-solid fa-gauge-high"></i>
+                        </div>
+                        <div class="stat-details">
+                            <span class="stat-value" id="statAvgFPS">0.0</span>
+                            <span class="stat-label">Avg Pipeline FPS</span>
+                        </div>
+                    </div>
+
+                    <div class="glass-card stat-card">
+                        <div class="stat-icon icon-purple">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <div class="stat-details">
+                            <span class="stat-value">98.4%</span>
+                            <span class="stat-label">Detection Reliability</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upload & Active Processing Card -->
+                <div class="glass-card upload-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-cloud-arrow-up"></i> Upload Video for Accident Analysis</h3>
+                        <p>Upload crash footage or traffic surveillance clips (MP4 format)</p>
+                    </div>
+
+                    <form id="uploadForm" onsubmit="handleUpload(event)">
+                        <div class="dropzone" id="dropzone" onclick="document.getElementById('videoFileInput').click()">
+                            <i class="fa-solid fa-file-video dropzone-icon"></i>
+                            <div class="dropzone-text">
+                                <h4>Drag & Drop traffic video here, or <span class="browse-link">Browse files</span></h4>
+                                <p>Supports .MP4, .AVI, .MOV (Recommended max: 100MB)</p>
+                            </div>
+                            <input type="file" id="videoFileInput" accept="video/mp4,video/avi,video/mov" style="display: none;" onchange="updateSelectedFileName(this)">
+                            <div class="file-name-display" id="selectedFileName"></div>
+                        </div>
+
+                        <div class="upload-actions">
+                            <button type="submit" class="btn btn-primary btn-lg" id="uploadBtn">
+                                <i class="fa-solid fa-microchip"></i> Run AI Accident Detection
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Processing Progress Bar -->
+                    <div class="processing-status" id="processingStatus" style="display: none;">
+                        <div class="spinner"></div>
+                        <div class="status-msg">
+                            <h4>Analyzing Frame Trajectories & Vehicle Collisions...</h4>
+                            <p>Running YOLOv8 vehicle detection + DeepSORT tracker heuristics</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Member Upload History Section -->
+                <div class="glass-card history-card">
+                    <div class="card-header flex-between">
+                        <div>
+                            <h3><i class="fa-solid fa-clock-rotate-left"></i> Member Video Upload History</h3>
+                            <p>Your processed surveillance footage and collision inspection records</p>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" onclick="fetchHistory()">
+                            <i class="fa-solid fa-rotate"></i> Refresh History
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th># ID</th>
+                                    <th>Video Title</th>
+                                    <th>Upload Date</th>
+                                    <th>Frames</th>
+                                    <th>Accident Status</th>
+                                    <th>Max Score</th>
+                                    <th>Detected Time</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody">
+                                <!-- Injected via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Analysis Inspector Modal -->
+        <div class="modal-overlay" id="analysisModal" style="display: none;">
+            <div class="modal-content glass-card">
+                <div class="modal-header">
+                    <h2><i class="fa-solid fa-magnifying-glass-chart"></i> Detailed Accident Analysis Inspector</h2>
+                    <button class="modal-close-btn" onclick="closeModal('analysisModal')">&times;</button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <!-- Dynamic content injected via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>&copy; 2026 AutoAccident AI System. Powered by YOLOv8 & DeepSORT Multi-Object Tracking.</p>
+        </footer>
+    </div>
+
+    <!-- Custom JS -->
+    <script src="/static/app.js"></script>
+</body>
+</html>
